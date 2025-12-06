@@ -1,0 +1,22 @@
+{
+    "name": "public-drive",
+    "version": "1.0.0",
+    "description": "Application de partage de fichiers public sans authentification",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node server.js"
+    },
+    "keywords": [
+        "drive",
+        "file-sharing",
+        "nodejs"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "express": "^4.18.2",
+        "multer": "^1.4.5-lts.1",
+        "mime-types": "^2.1.35"
+    }
+}
