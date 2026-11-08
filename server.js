@@ -3,9 +3,13 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const mime = require('mime-types');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Per-IP cap on every route; normal browsing stays far below it.
+app.use(rateLimit({ windowMs: 60 * 1000, limit: 300 }));
 
 // Middleware to parse JSON
 app.use(express.json());

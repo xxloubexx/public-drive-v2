@@ -2,6 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const { spawn } = require('node:child_process');
+const fs = require('node:fs');
 const path = require('node:path');
 
 const PORT = 3999;
@@ -74,4 +75,19 @@ test('deletes the folder but never the root', async () => {
     assert.strictEqual((await fetch(`${BASE}/files/`, { method: 'DELETE' })).status, 403);
     assert.strictEqual((await fetch(`${BASE}/files/${DIR}`, { method: 'DELETE' })).status, 200);
     assert.strictEqual((await fetch(`${BASE}/files/${DIR}/hello.txt`)).status, 404);
+});
+
+test('frontend escapes file names (XSS)', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'script.js'), 'utf8');
+    const escapeHtml = new Function(`${src.match(/function escapeHtml[\s\S]*?\n}/)[0]}; return escapeHtml;`)();
+    assert.strictEqual(escapeHtml(`<img onerror="a('b')">&`), '&#60;img onerror=&#34;a(&#39;b&#39;)&#34;&#62;&#38;');
+    assert.doesNotMatch(src, /["'>]\$\{item\.name\}/, 'raw file name inserted in HTML');
+    assert.doesNotMatch(src, /\son\w+="[^"]*\$\{/, 'data interpolated into an inline handler');
+});
+
+// Must stay last: it exhausts the per-IP quota for the rest of the run.
+test('rate limits floods', async () => {
+    let status;
+    for (let i = 0; i < 400 && status !== 429; i++) status = (await fetch(BASE + '/')).status;
+    assert.strictEqual(status, 429);
 });

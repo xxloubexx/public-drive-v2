@@ -294,7 +294,7 @@ function createItemCard(item) {
                     ${iconSvg}
                 </div>
                 <div class="file-info">
-                    <div class="file-name" title="${item.name}">${item.name}</div>
+                    <div class="file-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
                     <div class="file-meta">
                         ${item.isDirectory ? '<span>Dossier</span>' : `<span>${formatFileSize(item.size)}</span>`}
                         <span>${formatDate(item.modifiedAt)}</span>
@@ -311,7 +311,7 @@ function createItemCard(item) {
                         </svg>
                     </a>
                 ` : ''}
-                <button class="file-action-btn delete" title="Supprimer" onclick="event.stopPropagation(); deleteItem('${itemPath}', ${item.isDirectory})">
+                <button class="file-action-btn delete" title="Supprimer">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3,6 5,6 21,6"/>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -320,6 +320,12 @@ function createItemCard(item) {
             </div>
         </div>
     `;
+
+    // Bound in JS, not inline onclick: a quote in a file name would otherwise run as code.
+    card.querySelector('.file-action-btn.delete').addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteItem(itemPath, item.isDirectory);
+    });
 
     if (item.isDirectory) {
         card.addEventListener('click', () => navigateTo(itemPath));
@@ -486,8 +492,7 @@ function formatDate(dateString) {
     });
 }
 
+// Also escapes quotes so it is safe inside attribute values.
 function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return String(text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
